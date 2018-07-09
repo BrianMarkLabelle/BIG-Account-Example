@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:mock="http://www.mulesoft.org/schema/mule/mock" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:core="http://www.mulesoft.org/schema/mule/core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/mock http://www.mulesoft.org/schema/mule/mock/current/mule-mock.xsd">
+    <munit:config name="munit" mock-connectors="false" mock-inbounds="false" doc:name="MUnit configuration"/>
+    <spring:beans>
+        <spring:import resource="classpath:salesforce-api.xml"/>
+    </spring:beans>
+    <munit:test name="new-test-suite-getAccountByIDSubflowTest" description="Test">
+        <mock:when messageProcessor="sfdc:query-single" doc:name="Mock SDFC Single Query">
+            <mock:then-return payload="[&quot;ID&quot;: &quot;001f200001YiS8jAAF&quot;, &quot;Name&quot;: &quot;Brian Labelle Ltd.&quot;, &quot;BillingStreet&quot;: &quot;1234 Main Street&quot;, &quot;BillingCity&quot;: &quot;Toronto&quot;, &quot;BillingState&quot;: &quot;ON&quot;, &quot;BillingPostalCode&quot;: &quot;M6T 1T2&quot;, &quot;Phone&quot;: &quot;123-456-1234&quot;]"/>
+        </mock:when>
+        <mock:when messageProcessor="dw:transform-message" doc:name="Mock Transform Message">
+            <mock:then-return payload="{&quot;ID&quot;: &quot;001f200001YiS8jAAF&quot;, &quot;Name&quot;: &quot;Brian Labelle Ltd.&quot;, &quot;Street&quot;: &quot;1234 Main Street&quot;, &quot;City&quot;: &quot;Toronto&quot;, &quot;Province&quot;: &quot;ON&quot;, &quot;Postal Code&quot;: &quot;M6T 1T2&quot;, &quot;Cell&quot; &quot;123-456-1234&quot;}"/>
+        </mock:when>
+        <set-payload value="001f200001YiS8jAAF" doc:name="Set Payload to ID = 001f200001YiS8jAAF"/>
+        <flow-ref name="getAccountByIDSubflow" doc:name="getAccountByIDSubflow"/>
+        <munit:assert-payload-equals expectedValue="{&quot;ID&quot;: &quot;001f200001YiS8jAAF&quot;, &quot;Name&quot;: &quot;Brian Labelle Ltd.&quot;, &quot;Street&quot;: &quot;1234 Main Street&quot;, &quot;City&quot;: &quot;Toronto&quot;, &quot;Province&quot;: &quot;ON&quot;, &quot;Postal Code&quot;: &quot;M6T 1T2&quot;, &quot;Cell&quot; &quot;123-456-1234&quot;}" doc:name="Assert Payload"/>
+    </munit:test>
+</mule>

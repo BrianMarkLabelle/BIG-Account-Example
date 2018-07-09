@@ -1,0 +1,199 @@
+{
+	"info": {
+		"_postman_id": "9c6c6849-a089-44b1-9c3e-ecfe8bdefea0",
+		"name": "BIG Accounts API Exercise",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get all accounts",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "{{baseurl}}/accounts",
+					"host": [
+						"{{baseurl}}"
+					],
+					"path": [
+						"accounts"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create an account",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "Tavares",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "John",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "        {\n            \"Name\": \"Bribelle Test Create HTTPS.\",\n            \"Street\": \"33 Principal Street\",\n            \"City\": \"Toronto\",\n            \"Province\": \"ON\",\n            \"Postal Code\": \"M6P 1W4\",\n            \"Cell\": \"123-486-4444\"\n        }"
+				},
+				"url": {
+					"raw": "{{baseurl}}/accounts",
+					"host": [
+						"{{baseurl}}"
+					],
+					"path": [
+						"accounts"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get an account by ID",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "        {\n            \"Name\": \"Bribelle Ltd.\",\n            \"Street\": \"123 Main Street\",\n            \"City\": \"Toronto\",\n            \"Province\": \"ON\",\n            \"Postal Code\": \"M6P 1T3\",\n            \"Cell\": \"123-456-1234\",\n            \"Email\": \"BrianL@bribelle.com\"\n        }"
+				},
+				"url": {
+					"raw": "{{baseurl}}/accounts/001f200001YaCudAAF",
+					"host": [
+						"{{baseurl}}"
+					],
+					"path": [
+						"accounts",
+						"001f200001YaCudAAF"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update an account by ID",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "Tavares",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "John",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "        {\n       \"Name\": \"Bribelle Test Create HTTPS.\",\n        \"Street\": \"33 Principal Street\",\n        \"City\": \"Toronto\",\n        \"Province\": \"ON\",\n        \"Postal Code\": \"M6P 1W4\",\n        \"Cell\": \"123-486-3333\"\n      }"
+				},
+				"url": {
+					"raw": "{{baseurl}}/accounts/001f200001YkhtHAAR",
+					"host": [
+						"{{baseurl}}"
+					],
+					"path": [
+						"accounts",
+						"001f200001YkhtHAAR"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete an account by ID",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "Tavares",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "John",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "        {\n            \"Name\": \"Bribelle Ltd.\",\n            \"Street\": \"123 Main Street\",\n            \"City\": \"Toronto\",\n            \"Province\": \"ON\",\n            \"Postal Code\": \"M6P 1T3\",\n            \"Cell\": \"123-456-1234\",\n            \"Email\": \"BrianL@bribelle.com\"\n        }"
+				},
+				"url": {
+					"raw": "{{baseurl}}/accounts/001f200001YkhtHAAR",
+					"host": [
+						"{{baseurl}}"
+					],
+					"path": [
+						"accounts",
+						"001f200001YkhtHAAR"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8081/accounts",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "http://localhost:8082/accounts",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8082",
+					"path": [
+						"accounts"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

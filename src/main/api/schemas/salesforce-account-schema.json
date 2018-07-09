@@ -1,0 +1,33 @@
+{
+  "type": "account",
+  "properties": {
+    "id": {
+      "id": "http://jsonschema.net/id",
+      "type": "string"
+    },
+    "name": {
+      "id": "http://jsonschema.net/name",
+      "type": "string"
+    },
+    "street": {
+      "id": "http://jsonschema.net/street",
+      "type": "string"
+    },
+    "city": {
+      "id": "http://jsonschema.net/city",
+      "type": "string"
+    },
+    "province": {
+      "id": "http://jsonschema.net/province",
+      "type": "string"
+    },
+    "postalCode": {
+      "id": "http://jsonschema.net/postalCode",
+      "type": "string"
+    },
+    "cell": {
+      "id": "http://jsonschema.net/cell",
+      "type": "string"
+    }
+  }
+ }

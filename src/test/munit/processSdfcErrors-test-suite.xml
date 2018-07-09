@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:secure-property-placeholder="http://www.mulesoft.org/schema/mule/secure-property-placeholder" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:core="http://www.mulesoft.org/schema/mule/core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/secure-property-placeholder http://www.mulesoft.org/schema/mule/secure-property-placeholder/current/mule-secure-property-placeholder.xsd">
+
+    <munit:config name="munit"  mock-connectors="false" mock-inbounds="false" doc:name="MUnit configuration"/>
+
+    <spring:beans>
+        <spring:import resource="classpath:salesforce-api.xml"/>
+    </spring:beans>
+    <secure-property-placeholder:config name="Secure_Property_Placeholder1" key="JohnTavaresLeafs" location="salesforce-api-${env}.properties" doc:name="Secure Property Placeholder"/>
+
+    <munit:test name="new-test-suite-processSdfcErrorsSubflowTest" description="Test">
+        <set-payload value="blah, blah, blah, MALFORMED_ID, blah, blah" doc:name="Set Payload add Malformed Id to string."/>
+        <flow-ref name="processSdfcErrorsSubflow" doc:name="Flow-ref to processSdfcErrorsSubflow"/>
+        <munit:assert-payload-equals expectedValue="{&quot;message&quot; : &quot;Invalid account ID format, bad request: #[exception]&quot;}" doc:name="Assert Payload"/>
+    </munit:test>
+</mule>

@@ -1,0 +1,116 @@
+#%RAML 1.0
+baseUri: https://mocksvc.mulesoft.com/mocks/0c958bfd-a8b8-4483-a040-cf2f4359ee39 # 
+title: Salesforce API
+version: 1.0
+securitySchemes:
+ basic:
+    description: |
+      This API supports Basic Authentication.
+    type: Basic Authentication 
+
+/accounts:
+  get:
+    displayName: Get all accounts
+    description: Get all accounts from Salesforce
+    responses: 
+      200:
+        body: 
+          application/json:
+            example: |
+              {"accounts" : [
+                {"Id" : "001f200001YaCudAAF",
+                "Name" : "Bribelle Ltd.", 
+                "Street" : "123 Main Street", 
+                "City" : "Toronto", 
+                "Province" : "ON", 
+                "Postal Code" : "M6P 1T3", 
+                "Cell" : "123-456-1234"},
+                {"Id" : "001f200001YaCudAAG",
+                "Name" : "Smith and Sons, Ltd.",
+                 "Street" : "123 Bloor Street", 
+                 "City" : "Toronto", 
+                "Province" : "ON", 
+                "Postal Code" : "M6P 1T3", 
+                "Cell" : "123-456-1234"}]}
+
+
+      500:
+        body: 
+          application/json:
+            example: |
+              {"message" : "Could not get accounts, connection not available."}
+    
+
+  post:
+    securedBy: [basic]
+    displayName: Create an account
+    description: Create an account in Salesforce
+    body: 
+      application/json: 
+         example: !include ./examples/salesforce-account-post-request.json
+    responses: 
+      201:
+        body: 
+          application/json:
+            example: !include ./examples/salesforce-account-response.json
+      500:
+        body: 
+          application/json:
+            example: |
+              {"message": "Could not create account, connection unavailable."}
+  /{ID}:
+    get:
+      displayName: Get an account by ID
+      description: Get an account by ID from Salesforce
+      responses:
+        200:
+          body: 
+            application/json:
+              example: !include ./examples/salesforce-account-response.json
+        500:
+          body: 
+            application/json:
+              example: |
+                {"message" : "Could not get account, conection unavailable."}
+    put:
+      securedBy: [basic]
+      displayName: Update an account by ID
+      description: Update an account by ID in Salesforce
+      body: 
+        application/json:
+          example: !include ./examples/salesforce-account-response.json
+      responses: 
+        200:
+          body: 
+            application/json:
+              example: !include ./examples/salesforce-account-response.json
+        500:
+          body: 
+            application/json:
+              example: |
+                {"message" : " Could not update account, connection unavailable."}
+    delete:
+      securedBy: [basic]
+      displayName: Delete an account by ID
+      description: Delete an account by ID in Salesforce
+      responses: 
+        204:
+          body: 
+            application/json:
+              example: |
+                {}
+        500:
+          body: 
+            application/json:
+              example: |
+                {"message" : "Could not delete account, connection unavailable."}
+              
+
+        
+      
+
+
+    
+      
+    
+    

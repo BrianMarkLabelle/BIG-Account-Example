@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:secure-property-placeholder="http://www.mulesoft.org/schema/mule/secure-property-placeholder" xmlns:context="http://www.springframework.org/schema/context" xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns:mule-ss="http://www.mulesoft.org/schema/mule/spring-security"
+	xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:sfdc="http://www.mulesoft.org/schema/mule/sfdc" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ss="http://www.springframework.org/schema/security" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/spring-security http://www.mulesoft.org/schema/mule/spring-security/current/mule-spring-security.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-3.0.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/sfdc http://www.mulesoft.org/schema/mule/sfdc/current/mule-sfdc.xsd
+http://www.mulesoft.org/schema/mule/apikit http://www.mulesoft.org/schema/mule/apikit/current/mule-apikit.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-current.xsd
+http://www.mulesoft.org/schema/mule/secure-property-placeholder http://www.mulesoft.org/schema/mule/secure-property-placeholder/current/mule-secure-property-placeholder.xsd">
+    <http:listener-config name="salesforce-api-httpListenerConfig" host="0.0.0.0" port="${http.port}" doc:name="HTTP Listener Configuration" protocol="HTTPS">
+        <tls:context>
+            <tls:key-store type="jks" path="keystore.jks" alias="${tls.alias}" keyPassword="${tls.key.password}" password="${tls.password}"/>
+        </tls:context>
+    </http:listener-config>
+    <apikit:config name="salesforce-api-config" raml="salesforce-api.raml" consoleEnabled="false" doc:name="Router" keepRamlBaseUri="false"/>
+    <sfdc:config name="Salesforce__Basic_Authentication" username="${salesforce.username}" password="${salesforce.password}" securityToken="FHlhRCawKm3NVk0YDhQfDTNl" doc:name="Salesforce: Basic Authentication"/>
+    <apikit:config name="Router" raml="salesforce-api.raml" consoleEnabled="true" consolePath="console" keepRamlBaseUri="false" doc:name="Router">
+        <apikit:flow-mapping resource="/accounts" action="get" flow-ref="getAccounts"/>
+        <apikit:flow-mapping resource="/accounts" action="post" content-type="application/json" flow-ref="postAccount"/>
+        <apikit:flow-mapping resource="/accounts/{ID}" action="get" flow-ref="getAccountById"/>
+        <apikit:flow-mapping resource="/accounts/{ID}" action="put" content-type="application/json" flow-ref="putAccountById"/>
+        <apikit:flow-mapping resource="/accounts/{ID}" action="delete" flow-ref="deleteAccountById"/>
+    </apikit:config>
+ 
+   <spring:beans>
+      <ss:authentication-manager alias="authenticationManager">
+        <ss:authentication-provider>
+          <ss:user-service id="userService">
+             <ss:user name="${admin.user}" password="${admin.password}" authorities="ROLE_ADMIN" />
+             <ss:user name="${dev.user}" password="${dev.password}" authorities="ROLE_DEV" />
+           </ss:user-service>
+       </ss:authentication-provider>
+     </ss:authentication-manager>
+   </spring:beans>
+   <mule-ss:security-manager name="muleSecurityManager" doc:name="Spring Security Provider">
+     <mule-ss:delegate-security-provider name="memory-provider" delegate-ref="authenticationManager" />
+   </mule-ss:security-manager>
+    <secure-property-placeholder:config name="Secure_Property_Placeholder" key="JohnTavaresLeafs" location="salesforce-api-${env}.properties" doc:name="Secure Property Placeholder"/>
+    
+   
+   <flow name="salesforce-api-main">
+        <http:listener config-ref="salesforce-api-httpListenerConfig" path="/api/*" doc:name="HTTP"/>
+        <apikit:router config-ref="Router" doc:name="APIkit Router"/>
+        <exception-strategy ref="salesforce-api-apiKitGlobalExceptionMapping" doc:name="Reference Exception Strategy"/>
+    </flow>
+ 
+    <flow name="salesforce-api-console">
+        <http:listener config-ref="salesforce-api-httpListenerConfig" path="/console/*" doc:name="HTTP"/>
+        <apikit:console config-ref="salesforce-api-config" doc:name="APIkit Console"/>
+    </flow>
+
+    <flow name="putAccountById">
+        <mule-ss:http-security-filter realm="muleRealm" securityProviders="memory-provider"/>
+        <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
+        <dw:transform-message doc:name="Transform Message" metadata:id="c58079b8-0706-465b-aeba-b74b0eab9262">
+            <dw:input-payload mimeType="application/json"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+{
+	Id: inboundProperties."http.uri.params".ID,
+	Name: payload.Name,
+	BillingStreet: payload.Street,
+	BillingCity: payload.City,
+	BillingState: payload.Province,
+	BillingPostalCode: payload."Postal Code",
+	Phone: payload.Cell,
+	Active__c: "Yes"
+}]]></dw:set-payload>
+        </dw:transform-message>
+        <sfdc:update-single config-ref="Salesforce__Basic_Authentication" type="Account" doc:name="Salesforce"/>
+        <choice doc:name="Choice">
+            <when expression="#[payload.success]">
+                <flow-ref name="getAccountByIDSubflow" doc:name="getAccountByIDSubflow"/>
+                <logger level="INFO" doc:name="Logger"/>
+            </when>
+            <otherwise>
+                <flow-ref name="processSdfcErrorsSubflow" doc:name="processSdfcErrorsSubflow"/>
+                <logger level="INFO" doc:name="Logger"/>
+            </otherwise>
+        </choice>
+    </flow>
+
+    <flow name="deleteAccountById">
+        <mule-ss:http-security-filter realm="muleRealm" securityProviders="memory-provider"/>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+{
+	Id: inboundProperties."http.uri.params".ID,
+	Active__c: "No"
+}]]></dw:set-payload>
+        </dw:transform-message>
+        <sfdc:update-single config-ref="Salesforce__Basic_Authentication" type="Account" doc:name="Salesforce">
+            <sfdc:object ref="#[payload]"/>
+        </sfdc:update-single>
+        <choice tracking:enable-default-events="true" doc:name="Choice">
+            <when expression="#[payload != empty]">
+                <set-property propertyName="http.status" value="204" doc:name="Property"/>
+                <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
+                <set-payload value="{}" doc:name="Set Payload"/>
+                <logger level="INFO" doc:name="Logger"/>
+            </when>
+            <otherwise>
+                <set-property propertyName="http.status" value="500" doc:name="Property"/>
+                <logger level="INFO" doc:name="Logger"/>
+            </otherwise>
+        </choice>
+    </flow>
+
+    <flow name="getAccounts">
+        <sfdc:query config-ref="Salesforce__Basic_Authentication" query="dsql:SELECT AccountNumber,BillingCity,BillingCountry,BillingPostalCode,BillingState,BillingStreet,Id,Name,Phone FROM Account WHERE Active__c = 'Yes' ORDER BY Name ASC" doc:name="Salesforce"/>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+{
+	accounts: payload map ((payload01 , indexOfPayload01) -> {
+		Id: payload01.Id,
+		Name: payload01.Name,
+		Street: payload01.BillingStreet,
+		City: payload01.BillingCity,
+		Province: payload01.BillingState,
+		"Postal Code": payload01.BillingPostalCode,
+		Cell: payload01.Phone
+	})
+}]]></dw:set-payload>
+        </dw:transform-message>
+        <logger level="INFO" doc:name="Logger"/>
+    </flow>
+
+    <flow name="getAccountById">
+        <dw:transform-message doc:name="Transform Message" metadata:id="c58079b8-0706-465b-aeba-b74b0eab9262">
+            <dw:input-payload mimeType="application/json"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+{
+	id: inboundProperties."http.uri.params".ID
+}]]></dw:set-payload>
+        </dw:transform-message>
+        <flow-ref name="getAccountByIDSubflow" doc:name="getAccountByIDSubflow"/>
+        <logger level="INFO" doc:name="Logger"/>
+    </flow>
+
+    <flow name="postAccount">
+        <mule-ss:http-security-filter realm="muleRealm" securityProviders="memory-provider"/>
+        <dw:transform-message doc:name="Transform Message" metadata:id="c58079b8-0706-465b-aeba-b74b0eab9262">
+            <dw:input-payload mimeType="application/json"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+{
+	Name: payload.Name,
+	BillingStreet: payload.Street,
+	BillingCity: payload.City,
+	BillingState: payload.Province,
+	BillingPostalCode: payload."Postal Code",
+	Phone: payload.Cell,
+	Active__c: "Yes"
+}]]></dw:set-payload>
+        </dw:transform-message>
+        <sfdc:create-single config-ref="Salesforce__Basic_Authentication" type="Account" doc:name="Salesforce">
+            <sfdc:object ref="#[payload]"/>
+        </sfdc:create-single>
+        <choice doc:name="Choice">
+            <when expression="#[payload.success]">
+                <flow-ref name="getAccountByIDSubflow" doc:name="getAccountByIDSubflow"/>
+                <logger level="INFO" doc:name="Logger"/>
+            </when>
+            <otherwise>
+                <flow-ref name="processSdfcErrorsSubflow" doc:name="processSdfcErrorsSubflow"/>
+                <logger level="INFO" doc:name="Logger"/>
+            </otherwise>
+        </choice>
+    </flow>
+
+    <sub-flow name="processSdfcErrorsSubflow">
+        <choice doc:name="Choice">
+            <when expression="#[payload.toString().indexOf(&quot;MALFORMED_ID&quot;) &gt; -1]">
+                <set-payload value="{&quot;message&quot; : &quot;Invalid account ID format, bad request: #[exception]&quot;}" doc:name="Set Payload Invalid account"/>
+                <set-property propertyName="http.status" value="400" doc:name="Property"/>
+                <logger level="INFO" doc:name="Logger"/>
+            </when>
+            <when expression="#[payload.toString().indexOf(&quot;DUPLICATES_DETECTED&quot;) &gt; -1]">
+                <set-payload value="{&quot;message&quot; : &quot;Could not create account: Suspected duplicate account exists '#[payload.toString()]'&quot;}" doc:name="Set Payload Suspected Duplicate Exists"/>
+                <set-property propertyName="http.status" value="500" doc:name="Property"/>
+                <logger level="INFO" doc:name="Logger"/>
+            </when>
+            <otherwise>
+                <set-payload value="{&quot;message&quot; : &quot;Could not process account: '#[payload.toString()]'&quot;}" doc:name="Set Payload General Exception"/>
+                <set-property propertyName="http.status" value="500" doc:name="Property"/>
+                <logger level="INFO" doc:name="Logger"/>
+            </otherwise>
+        </choice>
+    </sub-flow>
+
+    <sub-flow name="getAccountByIDSubflow">
+        <sfdc:query-single config-ref="Salesforce__Basic_Authentication" query="dsql:SELECT Id,BillingCity,BillingPostalCode,BillingState,BillingStreet,Name,Phone FROM Account WHERE ID = '#[payload.id]'" doc:name="Salesforce"/>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+[{
+	ID: payload.Id,
+	Name: payload.Name,
+	Street: payload.BillingStreet,
+	City: payload.BillingCity,
+	Province: payload.BillingState,
+	"Postal Code": payload.BillingPostalCode,
+	Cell: payload.Phone
+}]]]></dw:set-payload>
+        </dw:transform-message>
+        <logger level="INFO" doc:name="Logger"/>
+    </sub-flow>
+
+    <apikit:mapping-exception-strategy name="salesforce-api-apiKitGlobalExceptionMapping">
+        <apikit:mapping statusCode="404">
+            <apikit:exception value="org.mule.module.apikit.exception.NotFoundException" />
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
+            <set-payload value="{ &quot;message&quot;: &quot;Resource not found&quot; }" doc:name="Set Payload"/>
+            <logger level="INFO" doc:name="Logger"/>
+        </apikit:mapping>
+        <apikit:mapping statusCode="405">
+            <apikit:exception value="org.mule.module.apikit.exception.MethodNotAllowedException" />
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
+            <set-payload value="{ &quot;message&quot;: &quot;Method not allowed&quot; }" doc:name="Set Payload"/>
+            <logger level="INFO" doc:name="Logger"/>
+        </apikit:mapping>
+        <apikit:mapping statusCode="415">
+            <apikit:exception value="org.mule.module.apikit.exception.UnsupportedMediaTypeException" />
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
+            <set-payload value="{ &quot;message&quot;: &quot;Unsupported media type&quot; }" doc:name="Set Payload"/>
+            <logger level="INFO" doc:name="Logger"/>
+        </apikit:mapping>
+        <apikit:mapping statusCode="406">
+            <apikit:exception value="org.mule.module.apikit.exception.NotAcceptableException" />
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
+            <set-payload value="{ &quot;message&quot;: &quot;Not acceptable&quot; }" doc:name="Set Payload"/>
+            <logger level="INFO" doc:name="Logger"/>
+        </apikit:mapping>
+        <apikit:mapping statusCode="400">
+            <apikit:exception value="org.mule.module.apikit.exception.BadRequestException" />
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
+            <set-payload value="{ &quot;message&quot;: &quot;Bad request&quot; }" doc:name="Set Payload"/>
+            <logger level="INFO" doc:name="Logger"/>
+        </apikit:mapping>
+        <apikit:mapping statusCode="500">
+            <apikit:exception value="java.lang.Exception"/>
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
+            <set-payload value="{ &quot;message&quot;: &quot;Server Exception: #[exception]&quot;}" doc:name="Set Payload"/>
+            <logger level="INFO" doc:name="Logger"/>
+        </apikit:mapping>
+    </apikit:mapping-exception-strategy>
+</mule>
